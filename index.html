@@ -120,8 +120,8 @@ a{color:#e2b77a}a:hover{color:#fff}
   <div style="position:relative;height:605px;flex:none;background:#0d6b37;overflow:hidden">
     {{ detailMedia }}
     <div style="position:absolute;left:32px;top:32px;display:flex;gap:18px;z-index:3">
-      <div role="button" onClick="{{ backToBrowse }}" style="height:96px;padding:0 34px 0 26px;border-radius:48px;background:rgba(0,0,0,.6);display:flex;align-items:center;gap:14px;font-size:26px;font-weight:500;cursor:pointer;color:#fff">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M15 5l-7 7 7 7"></path></svg>All <span>Hall of Fame</span>
+      <div role="button" onClick="{{ backToBrowse }}" aria-label="Back" style="width:96px;height:96px;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M15 5l-7 7 7 7"></path></svg>
       </div>
     </div>
   </div>
@@ -148,9 +148,7 @@ a{color:#e2b77a}a:hover{color:#fff}
       <div style="position:relative;margin:32px -64px 0">
         {{ galleryStrip }}
         <sc-if value="{{ galleryScrolls }}" hint-placeholder-val="{{ false }}">
-          <div role="button" onClick="{{ galleryNext }}" aria-label="More" style="position:absolute;right:28px;top:50%;margin-top:-44px;width:88px;height:88px;border-radius:50%;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#1c2420" stroke-width="2"><path d="M9 5l7 7-7 7"></path></svg>
-          </div>
+          <div role="button" onClick="{{ galleryNext }}" aria-label="More" style="position:absolute;right:28px;top:50%;margin-top:-36px;height:72px;padding:0 32px;border-radius:36px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;gap:10px;font-family:Inter, sans-serif;font-weight:600;font-size:26px;color:#1c2420"><span>Swipe</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0d6b37" stroke-width="3"><path d="M9 5l7 7-7 7"></path></svg></div>
         </sc-if>
       </div>
     </sc-if>
@@ -304,7 +302,8 @@ class Component extends DCLogic {
       const idx = Math.max(0, list.findIndex(x => x.id === s.detailId));
       const it = list[idx] || all.find(x => x.id === s.detailId);
       const pv = list[(idx - 1 + list.length) % list.length], nx = list[(idx + 1) % list.length];
-      const gItems = [...(it.videos || []).map(v => ({ kind: 'video', src: v })), ...it.photos.slice(1).map(p => ({ kind: 'photo', src: p }))];
+      const hasVid = (it.videos || []).length > 0;
+      const gItems = hasVid ? [...it.videos.slice(1).map(v => ({ kind: 'video', src: v })), ...it.photos.map(p => ({ kind: 'photo', src: p }))] : it.photos.slice(1).map(p => ({ kind: 'photo', src: p }));
       const H = React.createElement, TH = 400;
       const galleryStrip = H('div', { ref: this.galRef, onScroll: this.touch, style: { display: 'flex', gap: 16, overflowX: 'auto', padding: '0 64px', scrollBehavior: 'smooth' } },
         gItems.map((g, gi) => H('div', { key: gi, role: 'button', onClick: () => this.setState({ lb: g, lbList: gItems, lbIdx: gi, last: Date.now() }), style: { position: 'relative', flex: 'none', height: TH, borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#0d6b37', minWidth: g.kind === 'video' ? 711 : 0 } },
@@ -314,7 +313,7 @@ class Component extends DCLogic {
                  H('svg', { width: 44, height: 44, viewBox: '0 0 24 24' }, H('path', { d: 'M8 5v14l11-7z', fill: '#1c2420' })))]
             : H('img', { src: g.src, alt: '', onError: this.imgErr, style: { display: 'block', height: TH, width: 'auto' } }))));
       dv = { galleryStrip, hasGallery: gItems.length > 0, galleryScrolls: gItems.length > 1, galleryNext: () => { const el = this.galRef.current; if (el) el.scrollLeft += 600; this.touch(); }, d: { name: it.name, kicker: it.kicker, sub: it.sub, bio: it.bio || '' },
-        detailMedia: this.media({ ...it, video: '', videos: [] }, true, it.id + '-hero'),
+        detailMedia: hasVid ? this.media({ ...it, video: it.videos[0] }, false, it.id + '-hero-v') : this.media({ ...it, video: '', videos: [] }, true, it.id + '-hero'),
         champs: it.champs || [], hasChamps: !!(it.champs && it.champs.length),
         prevName: pv.name, nextName: nx.name, prevItem: () => this.openItem(pv.id), nextItem: () => this.openItem(nx.id) };
     }
